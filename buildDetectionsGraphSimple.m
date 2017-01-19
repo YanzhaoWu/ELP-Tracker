@@ -27,15 +27,16 @@
 %             endFrame
 %appearanceModels = sorted and filtered appearances between startFrame and
 %             endFrame
-function [linkGraph,linkIndexGraph,nTotalLinks,detections,appearanceModels] = buildDetectionsGraphSimple(detections,startFrame,endFrame,maxFrameGap,heightsPerSec,appearanceThreshold,fps,appearanceModels)
+function [linkGraph,linkIndexGraph,nTotalLinks,detections,linkCost] = buildDetectionsGraphSimple(detections,startFrame,endFrame,maxFrameGap,heightsPerSec,appearanceThreshold,fps,linkCost, v_link)
 
     [~,inds] = sort(detections(:,1),'ascend');
     detections = detections(inds,:);
-    appearanceModels = appearanceModels(inds,:);
+    linkCost = linkCost(inds,:);
+    linkCost = linkCost(:,inds);
 
     allInds = find(detections(:,1) >= startFrame & detections(:,1) <= endFrame);
     detections = detections(allInds,:);
-    appearanceModels = appearanceModels(allInds,:);
+    %appearanceModels = appearanceModels(allInds,:);
     nTotalDetections = size(detections,1);
     detections = [detections'; 1:size(detections,1)]';
     
@@ -66,20 +67,20 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections,appearanceModels] = bu
                     
                     timeGap = thisFrameDetections(j,1) - prevFrameDetections(i,1);
                     
-                    DetNumPrev = prevFrameDetections(i,8);
-                    DetNumThis = thisFrameDetections(j,8);
-                    costAppearance = 1 - sum(sqrt(appearanceModels(DetNumPrev,:) .* appearanceModels(DetNumThis,:)));                     
+                    %DetNumPrev = prevFrameDetections(i,8);
+                    %DetNumThis = thisFrameDetections(j,8);
+                    %costAppearance = 1 - sum(sqrt(appearanceModels(DetNumPrev,:) .* appearanceModels(DetNumThis,:)));                     
                                                              
                     %max allowed speed is relative to the bounding box size
                     maxSpeed = (thisFrameDetections(j,6) * heightsPerSec) / fps;
                     DistanceThreshold = maxSpeed * timeGap;
                     
-                    if timeGap > 0 && timeGap <= maxFrameGap && detectionOverlap >= 0.5 && distBetweenDets <= DistanceThreshold && costAppearance <= appearanceThreshold
+                    if timeGap > 0 && timeGap <= maxFrameGap && detectionOverlap >= 0.5 && distBetweenDets <= DistanceThreshold %&& costAppearance <= appearanceThreshold
                         
-                        costDist = 1 - exp(1).^-((distBetweenDets / DistanceThreshold)^2);
-                        costTime = 1 - exp(1).^-(((timeGap-1) / maxFrameGap)^2);                                                                                                                
+                        %costDist = 1 - exp(1).^-((distBetweenDets / DistanceThreshold)^2);
+                        %costTime = 1 - exp(1).^-(((timeGap-1) / maxFrameGap)^2);                                                                                                                
  
-                        linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = costAppearance + costDist + costTime;
+                        linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = c_t(linkCost(prevFrameDetections(i,8), thisFrameDetections(j,8)), v_link);%costAppearance + costDist + costTime;
                         linkIndexGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = linkIndex;
                         linkIndex = linkIndex + 1;
                     end

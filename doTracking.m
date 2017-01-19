@@ -42,13 +42,15 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
     detections = [detections zeros(size(detections,1),1)];
     
     %for each detection, extract its appearance model for later use
-    appearanceModels = getDetsAppearanceModels(detections,seqData.inputVideoFile);
+    %appearanceModels = getDetsAppearanceModels(detections,seqData.inputVideoFile);
+    detections_num = size(detections,1);
+    linkCost = rand(detections_num, detections_num);%h5read(trackerConf.linkCostHdf5File, 's_matrix');
     
     %use NMS to remove detections overlapped by >= 0.5
     if trackerConf.doDetectionPreProcessing
         keepAfterNMS =  nmsFilterDetections(detections,trackerConf.nmsThreshold);
         detections = detections(keepAfterNMS == 1,:);           
-        appearanceModels = appearanceModels(keepAfterNMS == 1,:);
+        %appearanceModels = appearanceModels(keepAfterNMS == 1,:);
     end
 
     tracklets = {};
@@ -75,13 +77,13 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
             if iters == 1
                 %in the first iteration - link inidividual detections
                 disp('Building link graph - simple');
-                [linkGraph,linkIndexGraph,nTotalLinks,detectionsSorted,appearanceModelsSorted] = ...
-                    buildDetectionsGraphSimple(detections,startFrame,endFrame,trackerConf.maxFrameJump,trackerConf.heightsPerSec,trackerConf.appearanceThreshold,seqData.seqFPS,appearanceModels);
+                [linkGraph,linkIndexGraph,nTotalLinks,detectionsSorted,linkCostSorted] = ...
+                    buildDetectionsGraphSimple(detections,startFrame,endFrame,trackerConf.maxFrameJump,trackerConf.heightsPerSec,trackerConf.appearanceThreshold,seqData.seqFPS,linkCost,trackerConf.v_link);
             else
                 %in later iterations - link tracklets over greater distances
                 disp('Building link graph - tracklets');
                 [linkGraph,linkIndexGraph,nTotalLinks,detectionsSorted] = ...
-                    buildDetectionsGraphTracklets(linkGraph,linkIndexGraph,detectionsSorted,tracklets,startPoints,endPoints,startFrame,endFrame,maxFrameGapBetweenTracklets,trackerConf.linkEnergyThreshold,trackerConf.heightsPerSec,seqData.seqFPS,appearanceModelsSorted);
+                    buildDetectionsGraphTracklets(linkGraph,linkIndexGraph,detectionsSorted,tracklets,startPoints,endPoints,startFrame,endFrame,maxFrameGapBetweenTracklets,trackerConf.linkEnergyThreshold,trackerConf.heightsPerSec,seqData.seqFPS,linkCostSorted, trackerConf.v_link);
             end
                         
             %costs is a vector holding costs in the following order [detections entry exit links]
@@ -110,7 +112,7 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
             %recover the tracklets for use in later iterations
             disp('Recovering Tracklets');
             [tracklets,startPoints,endPoints] = recoverTracklets(x,entryOffset,exitOffset,linksOffset,linkGraph,linkIndexGraph);
-            tracklets
+            %tracklets
         end
         
         % remove very short trackets as these may be false positives

@@ -26,7 +26,7 @@
 %nTotalLinks = total number of linkso
 
 function [linkGraph,linkIndexGraph,nTotalLinks,detections] = buildDetectionsGraphTracklets( ...
-    linkGraph,linkIndexGraph,detections,tracklets,startPoints,endPoints,startFrame,endFrame,maxFrameGapBetweenTracklets,linkEnergyThreshold,heightsPerSec,fps,appModels)
+    linkGraph,linkIndexGraph,detections,tracklets,startPoints,endPoints,startFrame,endFrame,maxFrameGapBetweenTracklets,linkEnergyThreshold,heightsPerSec,fps,linkCost,v_link)
 
     nTotalDetections = size(detections,1);
     prevFrameDetections = [];
@@ -67,8 +67,8 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections] = buildDetectionsGrap
                     trackletThis = sourceTracklets(thisFrameDetections(j,8));
                     
                     %the indicies of this detection within the tracklets
-                    trackletPrevInds = sourceInds(prevFrameDetections(i,8));
-                    trackletThisInds = sourceInds(thisFrameDetections(j,8));
+                    %trackletPrevInds = sourceInds(prevFrameDetections(i,8));
+                    %trackletThisInds = sourceInds(thisFrameDetections(j,8));
                     
                     %don't recompute the costs for links that already exist
                     alreadyLinked = linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) ~= -1;
@@ -86,24 +86,24 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections] = buildDetectionsGrap
                         if distBetweenDets < DistanceThreshold && t <= max([sourceTrackletLength,targetTrackletLength])
 
                             %find the "energy" associated with this link between tracklets
-                            linkEnergy = findTrackletLinkEnergyByRegression(detections,tracklets,trackletPrev,trackletThis,trackletPrevInds,trackletThisInds,fps);
-                            costAppearance = 1 - findTrackletAppearanceSimilarity(detections,tracklets,trackletPrev,trackletThis,appModels);
+                            %linkEnergy = findTrackletLinkEnergyByRegression(detections,tracklets,trackletPrev,trackletThis,trackletPrevInds,trackletThisInds,fps);
+                            %costAppearance = 1 - findTrackletAppearanceSimilarity(detections,tracklets,trackletPrev,trackletThis,appModels);
 
-                            if linkEnergy < linkEnergyThreshold
+                            %if linkEnergy < linkEnergyThreshold
     
-                                costLinkEnergy = 1 - exp(1).^-((linkEnergy / linkEnergyThreshold)^2);
-                                costTime = 1 - exp(1).^-(((t-1) / maxFrameGapBetweenTracklets)^2);
+                                %costLinkEnergy = 1 - exp(1).^-((linkEnergy / linkEnergyThreshold)^2);
+                                %costTime = 1 - exp(1).^-(((t-1) / maxFrameGapBetweenTracklets)^2);
                                 
                                 if alreadyLinked == false
-                                    linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = (costTime + costLinkEnergy + costAppearance);
+                                    linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = c_t(linkCost(prevFrameDetections(i,8),thisFrameDetections(j,8)), v_link);%(costTime + costLinkEnergy + costAppearance);
                                 else
-                                    linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = min([(costTime + costLinkEnergy + costAppearance) linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8))]);
+                                    linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = min([(c_t(linkCost(prevFrameDetections(i,8),thisFrameDetections(j,8)), v_link)) linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8))]);
                                 end
                                 if alreadyLinked == false
                                     linkIndexGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = linkIndex;
                                     linkIndex = linkIndex + 1;
                                 end
-                            end
+                            %end
 
                         end
                     end

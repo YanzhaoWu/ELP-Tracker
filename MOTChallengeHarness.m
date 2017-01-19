@@ -63,6 +63,7 @@ for seqNum = 1:1%numel(seqDirs)
     seqData.inputVideoFile = fullfile(rootDir,seqDirs{seqNum},'img1');        
     seqData.inputDetections = fullfile(rootDir,seqDirs{seqNum},'det','det.txt');    
     seqData.CSVOutputFile = fullfile(resultsDir,[seqDirs{seqNum} '.txt']);
+    seqData.linkCostHdf5File = fullfile(rootDir,[seqDirs{seqNum} '.hdf5']);
 
     % The following parameters control the tracker behaviour
     

@@ -89,7 +89,7 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
             costs = zeros(1,nTotalEdges);
             %add the cost of detections, which are negative and propto the detector confidence
             for i = 1:size(detectionsSorted,1)
-                costs(i) = -detectionsSorted(i,2);
+                costs(i) = c_det(detectionsSorted(i,2), trackerConf.v_det, trackerConf.v_link);
             end
             
             %use the linkGraph to build matrices that enforce tracking
@@ -110,6 +110,7 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
             %recover the tracklets for use in later iterations
             disp('Recovering Tracklets');
             [tracklets,startPoints,endPoints] = recoverTracklets(x,entryOffset,exitOffset,linksOffset,linkGraph,linkIndexGraph);
+            tracklets
         end
         
         % remove very short trackets as these may be false positives

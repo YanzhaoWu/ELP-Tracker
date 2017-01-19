@@ -29,8 +29,8 @@ clear vars
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NOTE - MODIFY FOLLOWING  TWO LINES TO POINT TO DEVKIT & SEQUENCES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-devkitRoot = fullfile('..','devkit','devkit');     %get the devkit from the MOT challenge website for tracker evaluation purposes
-trackerResourcesRoot = fullfile('..','2DMOT2015'); %set to the directory containing the images and detections for MOT challenge 
+devkitRoot = fullfile('..', '..', 'data', 'devkit');     %get the devkit from the MOT challenge website for tracker evaluation purposes
+trackerResourcesRoot = fullfile('..', '..', 'data', '2DMOT2015'); %set to the directory containing the images and detections for MOT challenge 
 
 addpath(genpath(devkitRoot));        
 uniqueRunNum = 1;            
@@ -54,7 +54,7 @@ if  ~exist(resultsDir, 'dir')
     mkdir(resultsDir);
 end
 
-for seqNum = 1:numel(seqDirs)
+for seqNum = 1:1%numel(seqDirs)
 
     seqData.rootDir = rootDir;
     seqData.seqDir = seqDirs{seqNum};
@@ -75,10 +75,12 @@ for seqNum = 1:numel(seqDirs)
     trackerConf.doFilterTracklets = true;           % remove short tracklets as these may be false positives
     trackerConf.maxFrameJump = 2;                   % max frame gap between detections allowed in first iteration
     trackerConf.maxFrameJumpMultiplier = 7;         % max frame gap * (nIterations - 1) between tracklets allowed in iterations > 1
-
+    % Setting for LBT-Tracker
+    trackerConf.v_det = 0.35;
+    trackerConf.v_link = 0.35;
     doTracking(seqData,trackerConf);
 end
 
 %use the MOT challenge script to evaluate the tracker on all sequences
-benchmarkDir = [rootDir '/'];
+benchmarkDir = [rootDir '\'];
 allMets = evaluateTracking(fullfile(devkitRoot,'seqmaps','c2-train.txt'), resultsDir, benchmarkDir);  

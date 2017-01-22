@@ -38,14 +38,20 @@ doTraining = true;
 
 if doTraining
     rootDir = fullfile(trackerResourcesRoot,'train');
-    seqDirs = {'ADL-Rundle-6','ADL-Rundle-8','ETH-Bahnhof','ETH-Pedcross2','ETH-Sunnyday','KITTI-13','KITTI-17','PETS09-S2L1','TUD-Campus','TUD-Stadtmitte','Venice-2'};
-    seqLens = [525,654,1000,840,354,340,145,795,71,179,600];
-    seqFPS = [30,30,14,14,14,10,10,7,25,25,30];
+%     seqDirs = {'ADL-Rundle-6','ADL-Rundle-8','ETH-Bahnhof','ETH-Pedcross2','ETH-Sunnyday','KITTI-13','KITTI-17','PETS09-S2L1','TUD-Campus','TUD-Stadtmitte','Venice-2'};
+%     seqLens = [525,654,1000,840,354,340,145,795,71,179,600];
+%     seqFPS = [30,30,14,14,14,10,10,7,25,25,30];
+    seqDirs = {'TUD-Campus'};
+    seqLens = [71, 0];
+    seqFPS = [25, 1];
 else
     rootDir = fullfile(trackerResourcesRoot,'test');
-    seqDirs = {'ADL-Rundle-1','ADL-Rundle-3','AVG-TownCentre','ETH-Crossing','ETH-Jelmoli','ETH-Linthescher','KITTI-16','KITTI-19','PETS09-S2L2','TUD-Crossing','Venice-1'};
-    seqLens = [500,625,450,219,440,1194,209,1059,436,201,450];
-    seqFPS = [30,30,3,14,14,14,10,10,7,25,30];   
+    %seqDirs = {'ADL-Rundle-1','ADL-Rundle-3','AVG-TownCentre','ETH-Crossing','ETH-Jelmoli','ETH-Linthescher','KITTI-16','KITTI-19','PETS09-S2L2','TUD-Crossing','Venice-1'};
+    %seqLens = [500,625,450,219,440,1194,209,1059,436,201,450];
+    %seqFPS = [30,30,3,14,14,14,10,10,7,25,30];
+    seqDirs = {'KITTI-16'};
+    seqLens = [209, 0];
+    seqFPS = [10, 1];
 end
 
 %make a directory to hold the output from the tracker
@@ -54,16 +60,17 @@ if  ~exist(resultsDir, 'dir')
     mkdir(resultsDir);
 end
 
-for seqNum = 1:1%numel(seqDirs)
+for seqNum = 1:numel(seqDirs)
 
     seqData.rootDir = rootDir;
     seqData.seqDir = seqDirs{seqNum};
     seqData.seqLen = seqLens(seqNum);
-    seqData.seqFPS = seqFPS(seqNum);        
+    seqData.seqFPS = seqFPS(seqNum);
+    seqData.minimumTrajectory = 30;
     seqData.inputVideoFile = fullfile(rootDir,seqDirs{seqNum},'img1');        
     seqData.inputDetections = fullfile(rootDir,seqDirs{seqNum},'det','det.txt');    
     seqData.CSVOutputFile = fullfile(resultsDir,[seqDirs{seqNum} '.txt']);
-    seqData.linkCostHdf5File = fullfile(rootDir,[seqDirs{seqNum} '.hdf5']);
+    seqData.linkCostHdf5File = fullfile(rootDir,seqDirs{seqNum},'s_matrix.hdf5');
 
     % The following parameters control the tracker behaviour
     
@@ -72,16 +79,16 @@ for seqNum = 1:1%numel(seqDirs)
     trackerConf.heightsPerSec = 3;                  % distance threshold used when linking detections. Relative to detection height which means it scales well with different video resolution / distance from the camera
     trackerConf.appearanceThreshold = 0.1;          % appearance similarity threshold to prevent detections with very different apppearance from linking
     trackerConf.doDetectionPreProcessing = true;    % apply NMS to detections before doing tracking
-    trackerConf.nmsThreshold = 0.5;                 % threshold used by NMS
+    trackerConf.nmsThreshold = 0.2;                 % threshold used by NMS
     trackerConf.doFilterTracklets = true;           % remove short tracklets as these may be false positives
     trackerConf.maxFrameJump = 2;                   % max frame gap between detections allowed in first iteration
     trackerConf.maxFrameJumpMultiplier = 7;         % max frame gap * (nIterations - 1) between tracklets allowed in iterations > 1
     % Setting for LBT-Tracker
-    trackerConf.v_det = 0.35;
-    trackerConf.v_link = 0.35;
+    trackerConf.v_det = 0.5;
+    trackerConf.v_link = 0.5;
     doTracking(seqData,trackerConf);
 end
 
 %use the MOT challenge script to evaluate the tracker on all sequences
-benchmarkDir = [rootDir '\'];
-allMets = evaluateTracking(fullfile(devkitRoot,'seqmaps','c2-train.txt'), resultsDir, benchmarkDir);  
+%benchmarkDir = [rootDir '\'];
+allMets = evaluateTracking(fullfile(devkitRoot,'seqmaps','c2-train-small.txt'), resultsDir, benchmarkDir);  

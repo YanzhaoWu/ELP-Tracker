@@ -93,7 +93,7 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections] = buildDetectionsGrap
     
                                 %costLinkEnergy = 1 - exp(1).^-((linkEnergy / linkEnergyThreshold)^2);
                                 %costTime = 1 - exp(1).^-(((t-1) / maxFrameGapBetweenTracklets)^2);
-                                
+                                %[prevFrameDetections(i,8),thisFrameDetections(j,8)]
                                 if alreadyLinked == false
                                     linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = c_t(linkCost(prevFrameDetections(i,8),thisFrameDetections(j,8)), v_link);%(costTime + costLinkEnergy + costAppearance);
                                 else

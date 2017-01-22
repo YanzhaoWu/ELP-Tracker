@@ -36,20 +36,23 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
     % frame-num, detection-confidence, x, y, w, h,   
     detections = csvread(seqData.inputDetections);
     detections(:,2) = detections(:,7);
-    detections(:,2) = detections(:,2) ./ max(detections(:,2));
+    detections(:,2) = detections(:,2) ./ 100; %max(detections(:,2));
     detections = detections(:,1:6);   
     detections(:,3:6) = round(detections(:,3:6));
     detections = [detections zeros(size(detections,1),1)];
     
     %for each detection, extract its appearance model for later use
     %appearanceModels = getDetsAppearanceModels(detections,seqData.inputVideoFile);
-    detections_num = size(detections,1);
-    linkCost = rand(detections_num, detections_num);%h5read(trackerConf.linkCostHdf5File, 's_matrix');
+    %detections_num = size(detections,1);
+    %linkCost = rand(detections_num, detections_num);
+    linkCost = h5read(seqData.linkCostHdf5File, '/s_matrix');
     
     %use NMS to remove detections overlapped by >= 0.5
     if trackerConf.doDetectionPreProcessing
         keepAfterNMS =  nmsFilterDetections(detections,trackerConf.nmsThreshold);
-        detections = detections(keepAfterNMS == 1,:);           
+        detections = detections(keepAfterNMS == 1,:);
+        linkCost = linkCost(keepAfterNMS == 1,:);
+        linkCost = linkCost(:,keepAfterNMS == 1);
         %appearanceModels = appearanceModels(keepAfterNMS == 1,:);
     end
 
@@ -119,16 +122,16 @@ function trackerOutputCSV = doTracking(seqData,trackerConf)
         if trackerConf.doFilterTracklets            
             shortTracklets = zeros(1,numel(tracklets));
             for t = 1:numel(tracklets)
-                if (tracklets{t}(end) - tracklets{t}(1)) < seqData.seqFPS
+                if (tracklets{t}(end) - tracklets{t}(1)) < seqData.minimumTrajectory
                     shortTracklets(t) = 1;
                 end
             end
             tracklets = tracklets(shortTracklets==0);            
         end
-        
+        tracklets
         [csvFrame,globalTrackNumber] = buildTrackerOutput(tracklets,detectionsSorted,globalTrackNumber,seqData.seqFPS);
         trackerOutputCSV = [trackerOutputCSV; csvFrame];
-        
     end
+    %trackerOutputCSV(find(trackerOutputCSV(:,1) == 4), :)
     csvwrite(seqData.CSVOutputFile,trackerOutputCSV);    
 end

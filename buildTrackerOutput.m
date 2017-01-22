@@ -57,9 +57,9 @@ function [csvFinal,globalTrackNumber] = buildTrackerOutput(tracklets,detections,
             end                            
         end
         
-        for c = 3:6
-            csvTrk(:,c) = smooth(csvTrk(:,c),'moving',fps);
-        end
+        %for c = 3:6
+        %    csvTrk(:,c) = smooth(csvTrk(:,c),'moving',fps);
+        %end
         
         %padding to get into same format as MOTChallenge required output
         csvTrk = [csvTrk (ones(size(csvTrk,1),4) * -1)];        

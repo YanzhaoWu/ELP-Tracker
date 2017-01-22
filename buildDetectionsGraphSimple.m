@@ -37,6 +37,8 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections,linkCost] = buildDetec
     allInds = find(detections(:,1) >= startFrame & detections(:,1) <= endFrame);
     detections = detections(allInds,:);
     %appearanceModels = appearanceModels(allInds,:);
+    linkCost = linkCost(allInds,:);
+    linkCost = linkCost(:,allInds);
     nTotalDetections = size(detections,1);
     detections = [detections'; 1:size(detections,1)]';
     
@@ -81,6 +83,7 @@ function [linkGraph,linkIndexGraph,nTotalLinks,detections,linkCost] = buildDetec
                         %costTime = 1 - exp(1).^-(((timeGap-1) / maxFrameGap)^2);                                                                                                                
  
                         linkGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = c_t(linkCost(prevFrameDetections(i,8), thisFrameDetections(j,8)), v_link);%costAppearance + costDist + costTime;
+                        %[prevFrameDetections(i,8),thisFrameDetections(j,8)]
                         linkIndexGraph(prevFrameDetections(i,8),thisFrameDetections(j,8)) = linkIndex;
                         linkIndex = linkIndex + 1;
                     end

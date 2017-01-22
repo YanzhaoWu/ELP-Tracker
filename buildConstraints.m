@@ -23,7 +23,7 @@ function [costs,constraintsLeq,constraintsLegRHS,constraintsEq,constraintsEqRHS,
     = buildConstraints(detections,nTotalEdges,linkGraph,linkIndexGraph,costs)
 
     %fill in the cost of the entry / exit nodes - all zero
-    %cost(size(detections,1) + 1:size(detections,1) * 2) = 0;
+    costs(size(detections,1) + 1:size(detections,1) * 2) = 0.95;
     linksOffset = size(detections,1) * 3;
     exitOffset = size(detections,1) * 2;
     entryOffset = size(detections,1);
